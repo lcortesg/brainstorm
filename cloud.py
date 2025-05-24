@@ -14,24 +14,31 @@ st.set_page_config(
     # page_icon=im,
     layout="wide",
 )
-hide_streamlit_style = """
-    <style>
-        .reportview-container {
-            margin-top: -2em;
-        }
-        #MainMenu {visibility: hidden;}
-        .stDeployButton {display:none;}
-        footer {visibility: hidden;}
-        #stDecoration {display:none;}
-    </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* Hide Streamlit header and footer */
+header, footer {
+    display: none !important;
+}
+
+/* Remove top padding/margin to eliminate blank space */
+[data-testid="stAppViewContainer"] > .main {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Hide any links to streamlit.io */
+a[href*="streamlit.io"] {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 html('''
 <script>
     window.top.document.querySelectorAll(`[href*="streamlit.io"]`).forEach(e => e.setAttribute("style", "display: none;"));
 </script>
-''')
+''', height=0, width=0)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
