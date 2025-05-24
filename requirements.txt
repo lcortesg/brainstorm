@@ -1,0 +1,5 @@
+streamlit
+matplotlib
+wordcloud
+gspread
+oauth2client
