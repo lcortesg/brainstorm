@@ -150,6 +150,7 @@ def word_cloud(title):
             fig = create_word_cloud(cache_data, "viridis", title)
             with placeholder.container():
                 st.pyplot(fig)
+            plt.close(fig)  # Close the figure to free memory
 
         time.sleep(UPDATE_INTERVAL)
 
