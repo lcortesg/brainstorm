@@ -97,23 +97,39 @@ except Exception as e:
     st.stop()
 
 
+def create_word_cloud(ans):
+    word_freq = create_word_freq(ans)
+    wc = WordCloud(font_path='Verdana.ttf', width=800, height=400, background_color='white')
+    wc.generate_from_frequencies(word_freq)
+    # Plot using matplotlib
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wc, interpolation='bilinear')
+    ax.axis('off')
+    return fig
+
+
 def word_cloud():
     placeholder = st.empty()
+    last_fetch_time = 0
+    cache_data = None
+    FETCH_INTERVAL = 10  # Fetch new data every 10 seconds
+    UPDATE_INTERVAL = 1  # Update the word cloud every 1 second
+
     while True:
-        ans = read_google_sheet(client, "Respuestas")
-        word_freq = create_word_freq(ans)
-        wc = WordCloud(font_path='Verdana.ttf', width=800, height=400, background_color='white')
-        wc.generate_from_frequencies(word_freq)
+        current_time = time.time()
 
-        # Plot using matplotlib
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.imshow(wc, interpolation='bilinear')
-        ax.axis('off')
+        # Fetch new data from Google Sheets every FETCH_INTERVAL seconds
+        if (current_time - last_fetch_time) >= FETCH_INTERVAL:
+            cache_data = read_google_sheet(client, "Respuestas")
+            last_fetch_time = current_time
 
-        # Display the plot in Streamlit
-        with placeholder.container():
-            st.pyplot(fig)
-        time.sleep(1)
+        # Update the word cloud with the latest data every UPDATE_INTERVAL seconds
+        if cache_data is not None and not cache_data.empty:
+            fig = create_word_cloud(cache_data)
+            with placeholder.container():
+                st.pyplot(fig)
+
+        time.sleep(UPDATE_INTERVAL)
 
 def main():
     try:
