@@ -84,8 +84,8 @@ def main():
         data = read_google_sheet(client, "Preguntas")
         questions = data["Preguntas"].to_list()
         question = questions[0]
+        st.image("fabrica2.png")
         st.title(question)
-
         new_data = st.text_input("Describe en una palabra lo que significa para ti")
         if st.button("Enviar respuesta", type="primary"):
             write_google_sheet(client, new_data, "Respuestas")
