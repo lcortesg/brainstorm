@@ -7,16 +7,13 @@ import matplotlib.pyplot as plt
 import re
 from collections import Counter
 import time
+from streamlit.components.v1 import html
 
-# im = Image.open('assets/logos/favicon.png')
 st.set_page_config(
     page_title='Nube',
     # page_icon=im,
     layout="wide",
 )
-
-# add_logo("assets/logos/ap75.png", height=75)
-
 hide_streamlit_style = """
     <style>
         .reportview-container {
@@ -29,6 +26,12 @@ hide_streamlit_style = """
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+html('''
+<script>
+    window.top.document.querySelectorAll(`[href*="streamlit.io"]`).forEach(e => e.setAttribute("style", "display: none;"));
+</script>
+''')
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
