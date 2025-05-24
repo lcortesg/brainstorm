@@ -11,23 +11,17 @@ from streamlit.components.v1 import html
 
 st.set_page_config(
     page_title='Nube',
-    # page_icon=im,
     layout="wide",
 )
 st.markdown("""
 <style>
-/* Hide Streamlit header and footer */
 header, footer {
     display: none !important;
 }
-
-/* Remove top padding/margin to eliminate blank space */
 [data-testid="stAppViewContainer"] > .main {
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
-
-/* Hide any links to streamlit.io */
 a[href*="streamlit.io"] {
     display: none !important;
 }
@@ -41,138 +35,107 @@ html('''
 ''', height=0, width=0)
 
 SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
-    "https://www.googleapis.com/auth/drive.file",   # For Google Drive file access
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
 ]
 URL = st.secrets["google_service_account"]["sheet_url"]
 
 
-# Authenticate with Google Sheets
+@st.cache_resource
 def authenticate_google_sheets():
-    # Use Streamlit secrets for authentication
     service_account_info = st.secrets["google_service_account"]
     credentials = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
     client = gspread.authorize(credentials)
     return client
 
-# Read data from Google Spreadsheet
-def read_google_sheet(client, name):
-    sheet = client.open_by_url(URL)#.sheet1  # Open the first sheet
-    worksheet = sheet.worksheet(name)
-    data = worksheet.get_all_records()  # Fetch all data as a list of dictionaries
-    return pd.DataFrame(data)
 
-# Write data to Google Spreadsheet
-def write_google_sheet(client, data, name):
-    sheet = client.open_by_url(URL)#.sheet1
-    worksheet = sheet.worksheet(name)
-    dataf = worksheet.get_all_records()
-    dataf = pd.DataFrame(dataf)
-    index = dataf.shape[0]
+def read_google_sheet(sheet, sheet_name):
+    worksheet = sheet.worksheet(sheet_name)
+    all_values = worksheet.get_all_values()
+    if not all_values or len(all_values) < 2:
+        return pd.DataFrame()
+    headers = all_values[0]
+    rows = all_values[1:]
+    df = pd.DataFrame(rows, columns=headers)
+    return df
+
+
+def write_google_sheet(sheet, data, sheet_name):
+    worksheet = sheet.worksheet(sheet_name)
+    dataf = worksheet.get_all_values()
+    index = len(dataf)
     datas = data.split()
 
     for i in range(len(datas)):
-        worksheet.update_cell(index+2, i+1, datas[i])
+        worksheet.update_cell(index + 1, i + 1, datas[i])
     st.success("Respuesta enviada!")
     st.balloons()
 
+
 def create_word_freq(dataframe):
-    """
-    Create a word frequency dictionary from all text data in a DataFrame.
-
-    Args:
-        dataframe (pd.DataFrame): The DataFrame containing text data.
-
-    Returns:
-        dict: A dictionary where keys are words and values are their frequencies.
-    """
-    # Concatenate all text from all columns
     all_text = " ".join(
         dataframe.fillna("").astype(str).apply(lambda row: " ".join(row), axis=1)
     )
-
-    # Tokenize: convert to lowercase and split by non-alphanumeric characters
     words = re.findall(r'\b\w+\b', all_text.lower())
-
-    # Count word frequencies
     word_freq = dict(Counter(words))
-
     return word_freq
 
-# Authenticate and connect to Google Sheets
+
 try:
     client = authenticate_google_sheets()
+    sheet = client.open_by_url(URL)  # Open once here and reuse
 except Exception as e:
     st.error(f"Failed to authenticate with Google Sheets: {e}")
     st.stop()
 
 
-def create_word_cloud_old(ans, colormap='viridis'):
-    word_freq = create_word_freq(ans)
-    wc = WordCloud(font_path='Verdana.ttf', width=3840, height=1400, background_color='white', colormap=colormap)
-    wc.generate_from_frequencies(word_freq)
-    # Plot using matplotlib
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.imshow(wc, interpolation='bilinear')
-    ax.axis('off')
-    return fig
-
 def create_word_cloud(ans, colormap='viridis', title=None):
     word_freq = create_word_freq(ans)
-
-    # Use high resolution for WordCloud
     wc = WordCloud(
         font_path='Verdana.ttf',
-        width=1920,  # Adjust resolution to match display
+        width=1920,
         height=1080,
         background_color='white',
         colormap=colormap
     )
     wc.generate_from_frequencies(word_freq)
-
-    # Plot using matplotlib with matching figsize
     fig, ax = plt.subplots(figsize=(19.2, 10.8), dpi=300)
     ax.imshow(wc, interpolation='bilinear')
     ax.axis('off')
-
-    # Add title if provided
     if title:
         ax.set_title(title, fontsize=34, weight='bold', pad=20)
     return fig
 
-def word_cloud(title):
+
+def word_cloud(title, fetch=10, update=1):
     placeholder = st.empty()
     last_fetch_time = 0
     cache_data = None
-    FETCH_INTERVAL = 10  # Fetch new data every 10 seconds
-    UPDATE_INTERVAL = 1  # Update the word cloud every 1 second
+    FETCH_INTERVAL = fetch
+    UPDATE_INTERVAL = update
 
     while True:
         current_time = time.time()
-
-        # Fetch new data from Google Sheets every FETCH_INTERVAL seconds
         if (current_time - last_fetch_time) >= FETCH_INTERVAL:
-            cache_data = read_google_sheet(client, "Respuestas")
+            cache_data = read_google_sheet(sheet, "Respuestas")  # Use opened sheet
             last_fetch_time = current_time
 
-        # Update the word cloud with the latest data every UPDATE_INTERVAL seconds
         if cache_data is not None and not cache_data.empty:
             fig = create_word_cloud(cache_data, "viridis", title)
             with placeholder.container():
                 st.pyplot(fig)
-            plt.close(fig)  # Close the figure to free memory
+            plt.close(fig)
 
         time.sleep(UPDATE_INTERVAL)
 
+
 def main():
     try:
-        data = read_google_sheet(client, "Preguntas")
-        questions = data["Preguntas"].to_list()
-        question = questions[0]
-        #st.title(question)
-        word_cloud(question)
-
-
+        data = read_google_sheet(sheet, "Preguntas")  # Use opened sheet
+        question = data["Preguntas"].to_list()[0]
+        fetch = int(data["fetch"].to_list()[0])
+        update = int(data["update"].to_list()[0])
+        word_cloud(question, fetch, update)
     except Exception as e:
         st.error(f"Error reading spreadsheet: {e}")
 

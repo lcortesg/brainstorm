@@ -6,23 +6,19 @@ from streamlit.components.v1 import html
 
 st.set_page_config(
     page_title='Ideas',
-    # page_icon=im,
     layout="wide",
 )
+
+# Hide Streamlit branding and remove padding/margin
 st.markdown("""
 <style>
-/* Hide Streamlit header and footer */
 header, footer {
     display: none !important;
 }
-
-/* Remove top padding/margin to eliminate blank space */
 [data-testid="stAppViewContainer"] > .main {
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
-
-/* Hide any links to streamlit.io */
 a[href*="streamlit.io"] {
     display: none !important;
 }
@@ -36,39 +32,42 @@ html('''
 ''', height=0, width=0)
 
 SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
-    "https://www.googleapis.com/auth/drive.file",   # For Google Drive file access
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
 ]
+
 URL = st.secrets["google_service_account"]["sheet_url"]
 
 
-# Authenticate with Google Sheets
+@st.cache_resource
 def authenticate_google_sheets():
-    # Use Streamlit secrets for authentication
     service_account_info = st.secrets["google_service_account"]
     credentials = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
     client = gspread.authorize(credentials)
     return client
 
-# Read data from Google Spreadsheet
-def read_google_sheet(client, name):
-    sheet = client.open_by_url(URL)#.sheet1  # Open the first sheet
-    worksheet = sheet.worksheet(name)
-    data = worksheet.get_all_records()  # Fetch all data as a list of dictionaries
+
+def open_sheet(client, url):
+    return client.open_by_url(url)
+
+
+def read_google_sheet(sheet, worksheet_name):
+    worksheet = sheet.worksheet(worksheet_name)
+    data = worksheet.get_all_records()
     return pd.DataFrame(data)
 
 
-def write_google_sheet(client, data, sheet_name):
-    sheet = client.open_by_url(URL)
-    worksheet = sheet.worksheet(sheet_name)
+def write_google_sheet(sheet, data, worksheet_name):
+    worksheet = sheet.worksheet(worksheet_name)
     datas = data.split()
     worksheet.append_row(datas)
     st.success("Respuesta enviada!")
     st.balloons()
 
-# Authenticate and connect to Google Sheets
+
 try:
     client = authenticate_google_sheets()
+    sheet = open_sheet(client, URL)
 except Exception as e:
     st.error(f"Failed to authenticate with Google Sheets: {e}")
     st.stop()
@@ -76,14 +75,20 @@ except Exception as e:
 
 def main():
     try:
-        data = read_google_sheet(client, "Preguntas")
+        data = read_google_sheet(sheet, "Preguntas")
         questions = data["Preguntas"].to_list()
-        question = questions[0]
+        question = questions[0] if questions else "No hay preguntas disponibles."
+
         st.image("fabrica2.png")
         st.title(question, anchor=False)
+
         new_data = st.text_input("Describe en una palabra lo que significa para ti")
+
         if st.button("Enviar respuesta", type="primary"):
-            write_google_sheet(client, new_data, "Respuestas")
+            if new_data.strip():
+                write_google_sheet(sheet, new_data, "Respuestas")
+            else:
+                st.warning("Por favor ingresa una respuesta antes de enviar.")
 
     except Exception as e:
         st.error(f"Error reading spreadsheet: {e}")
