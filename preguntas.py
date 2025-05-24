@@ -9,57 +9,25 @@ st.set_page_config(
     # page_icon=im,
     layout="wide",
 )
-hide_streamlit_style = """
-    <style>
-        .reportview-container {
-            margin-top: -2em;
-        }
-        #MainMenu {visibility: hidden;}
-        .stDeployButton {display:none;}
-        footer {visibility: hidden;}
-        #stDecoration {display:none;}
-    </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* Hide Streamlit header and footer */
+header, footer {
+    display: none !important;
+}
 
-hide_streamlit_style = """
-                <style>
-                div[data-testid="stToolbar"] {
-                visibility: hidden;
-                height: 0%;
-                position: fixed;
-                }
-                div[data-testid="stDecoration"] {
-                visibility: hidden;
-                height: 0%;
-                position: fixed;
-                }
-                div[data-testid="stStatusWidget"] {
-                visibility: hidden;
-                height: 0%;
-                position: fixed;
-                }
-                #MainMenu {
-                visibility: hidden;
-                height: 0%;
-                }
-                header {
-                visibility: hidden;
-                height: 0%;
-                }
-                footer {
-                visibility: hidden;
-                height: 0%;
-                }
-                </style>
-                """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+/* Remove top padding/margin to eliminate blank space */
+[data-testid="stAppViewContainer"] > .main {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
 
-# html('''
-# <script>
-#     window.top.document.querySelectorAll(`[href*="streamlit.io"]`).forEach(e => e.setAttribute("style", "display: none;"));
-# </script>
-# ''')
+/* Hide any links to streamlit.io */
+a[href*="streamlit.io"] {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
