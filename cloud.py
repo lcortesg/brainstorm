@@ -6,7 +6,29 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import re
 from collections import Counter
+import time
 
+# im = Image.open('assets/logos/favicon.png')
+st.set_page_config(
+    page_title='Nube',
+    # page_icon=im,
+    layout="wide",
+)
+
+# add_logo("assets/logos/ap75.png", height=75)
+
+hide_streamlit_style = """
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
@@ -76,18 +98,22 @@ except Exception as e:
 
 
 def word_cloud():
-    ans = read_google_sheet(client, "Respuestas")
-    word_freq = create_word_freq(ans)
-    wc = WordCloud(font_path='Verdana.ttf', width=800, height=400, background_color='white')
-    wc.generate_from_frequencies(word_freq)
+    placeholder = st.empty()
+    while True:
+        ans = read_google_sheet(client, "Respuestas")
+        word_freq = create_word_freq(ans)
+        wc = WordCloud(font_path='Verdana.ttf', width=800, height=400, background_color='white')
+        wc.generate_from_frequencies(word_freq)
 
-    # Plot using matplotlib
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.imshow(wc, interpolation='bilinear')
-    ax.axis('off')
+        # Plot using matplotlib
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.imshow(wc, interpolation='bilinear')
+        ax.axis('off')
 
-    # Display the plot in Streamlit
-    st.pyplot(fig)
+        # Display the plot in Streamlit
+        with placeholder.container():
+            st.pyplot(fig)
+        time.sleep(1)
 
 def main():
     try:

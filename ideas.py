@@ -3,6 +3,28 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
 
+# im = Image.open('assets/logos/favicon.png')
+st.set_page_config(
+    page_title='Ideas',
+    # page_icon=im,
+    layout="wide",
+)
+
+# add_logo("assets/logos/ap75.png", height=75)
+
+hide_streamlit_style = """
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
     "https://www.googleapis.com/auth/drive.file",   # For Google Drive file access
