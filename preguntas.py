@@ -29,6 +29,12 @@ a[href*="streamlit.io"] {
 </style>
 """, unsafe_allow_html=True)
 
+html('''
+<script>
+    window.top.document.querySelectorAll(`[href*="streamlit.io"]`).forEach(e => e.setAttribute("style", "display: none;"));
+</script>
+''', height=0, width=0)
+
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",  # For Google Sheets API
     "https://www.googleapis.com/auth/drive.file",   # For Google Drive file access
