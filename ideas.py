@@ -57,17 +57,12 @@ def read_google_sheet(client, name):
     data = worksheet.get_all_records()  # Fetch all data as a list of dictionaries
     return pd.DataFrame(data)
 
-# Write data to Google Spreadsheet
-def write_google_sheet(client, data, name):
-    sheet = client.open_by_url(URL)#.sheet1
-    worksheet = sheet.worksheet(name)
-    dataf = worksheet.get_all_records()
-    dataf = pd.DataFrame(dataf)
-    index = dataf.shape[0]
-    datas = data.split()
 
-    for i in range(len(datas)):
-        worksheet.update_cell(index+2, i+1, datas[i])
+def write_google_sheet(client, data, sheet_name):
+    sheet = client.open_by_url(URL)
+    worksheet = sheet.worksheet(sheet_name)
+    datas = data.split()
+    worksheet.append_row(datas)
     st.success("Respuesta enviada!")
     st.balloons()
 
@@ -85,10 +80,11 @@ def main():
         questions = data["Preguntas"].to_list()
         question = questions[0]
         st.image("fabrica2.png")
-        st.title(question)
+        st.title(question, anchor=False)
         new_data = st.text_input("Describe en una palabra lo que significa para ti")
         if st.button("Enviar respuesta", type="primary"):
             write_google_sheet(client, new_data, "Respuestas")
+
     except Exception as e:
         st.error(f"Error reading spreadsheet: {e}")
 

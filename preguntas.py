@@ -87,7 +87,7 @@ def main():
         data = read_google_sheet(client, "Preguntas")
         questions = data["Preguntas"].to_list()
         question = questions[0]
-        st.title("Cambio de pregunta")
+        st.title("Cambio de pregunta", anchor=False)
         new_data = st.text_input("Escribe la pregunta que desees", question)
 
         if st.button("Cambiar pregunta", type="primary"):
