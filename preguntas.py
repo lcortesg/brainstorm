@@ -51,14 +51,17 @@ def read_google_sheet(client, name):
 def write_google_sheet(client, data, name):
     sheet = client.open_by_url(URL)#.sheet1
     worksheet = sheet.worksheet(name)
-    dataf = worksheet.get_all_records()
-    dataf = pd.DataFrame(dataf)
-    index = dataf.shape[0]
-    datas = data.split()
+    worksheet.update_cell(2, 1, data)
+    st.success("Pregunta cambiada!")
+    st.balloons()
 
-    for i in range(len(datas)):
-        worksheet.update_cell(index+2, i+1, datas[i])
-    st.success("Respuesta enviada!")
+
+def clear_google_sheet(client, data, name):
+    sheet = client.open_by_url(URL)
+    worksheet = sheet.worksheet(name)
+    worksheet.clear()
+    worksheet.update_cell(1, 1, "Respuestas")
+    st.success("Respuestas eliminadas!")
     st.balloons()
 
 # Authenticate and connect to Google Sheets
@@ -74,11 +77,13 @@ def main():
         data = read_google_sheet(client, "Preguntas")
         questions = data["Preguntas"].to_list()
         question = questions[0]
-        st.title(question)
+        st.title("Cambio de pregunta")
+        new_data = st.text_input("Escribe la pregunta que desees", question)
 
-        new_data = st.text_input("Describe en una palabra lo que significa para ti")
-        if st.button("Enviar respuesta", type="primary"):
-            write_google_sheet(client, new_data, "Respuestas")
+        if st.button("Cambiar pregunta", type="primary"):
+            write_google_sheet(client, new_data, "Preguntas")
+        if st.button("Limpiar respuestas", type="primary"):
+            clear_google_sheet(client, new_data, "Respuestas")
     except Exception as e:
         st.error(f"Error reading spreadsheet: {e}")
 

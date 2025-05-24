@@ -97,9 +97,9 @@ except Exception as e:
     st.stop()
 
 
-def create_word_cloud(ans):
+def create_word_cloud_old(ans, colormap='viridis'):
     word_freq = create_word_freq(ans)
-    wc = WordCloud(font_path='Verdana.ttf', width=800, height=400, background_color='white')
+    wc = WordCloud(font_path='Verdana.ttf', width=3840, height=1400, background_color='white', colormap=colormap)
     wc.generate_from_frequencies(word_freq)
     # Plot using matplotlib
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -107,8 +107,30 @@ def create_word_cloud(ans):
     ax.axis('off')
     return fig
 
+def create_word_cloud(ans, colormap='viridis', title=None):
+    word_freq = create_word_freq(ans)
 
-def word_cloud():
+    # Use high resolution for WordCloud
+    wc = WordCloud(
+        font_path='Verdana.ttf',
+        width=1920,  # Adjust resolution to match display
+        height=1080,
+        background_color='white',
+        colormap=colormap
+    )
+    wc.generate_from_frequencies(word_freq)
+
+    # Plot using matplotlib with matching figsize
+    fig, ax = plt.subplots(figsize=(19.2, 10.8), dpi=300)
+    ax.imshow(wc, interpolation='bilinear')
+    ax.axis('off')
+
+    # Add title if provided
+    if title:
+        ax.set_title(title, fontsize=34, weight='bold', pad=20)
+    return fig
+
+def word_cloud(title):
     placeholder = st.empty()
     last_fetch_time = 0
     cache_data = None
@@ -125,7 +147,7 @@ def word_cloud():
 
         # Update the word cloud with the latest data every UPDATE_INTERVAL seconds
         if cache_data is not None and not cache_data.empty:
-            fig = create_word_cloud(cache_data)
+            fig = create_word_cloud(cache_data, "viridis", title)
             with placeholder.container():
                 st.pyplot(fig)
 
@@ -136,8 +158,8 @@ def main():
         data = read_google_sheet(client, "Preguntas")
         questions = data["Preguntas"].to_list()
         question = questions[0]
-        st.title(question)
-        word_cloud()
+        #st.title(question)
+        word_cloud(question)
 
 
     except Exception as e:
