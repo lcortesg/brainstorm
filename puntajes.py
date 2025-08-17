@@ -1,14 +1,12 @@
 import streamlit as st
 import random
-import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(
     page_title='Puntajes',
     layout="wide",
 )
 
-st.title("Torneo Eliminación Directa", anchor=False)
+st.title("Torneo Galadhrym", anchor=False)
 
 # Inputs
 col01, col02 = st.columns(2)
