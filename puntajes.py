@@ -154,7 +154,7 @@ if len(players) == playerN:
 
         lround = 1
         while len(losers_pool) > 1:
-            st.subheader(f"Ronda {lround} - Cuadro de Perdedores")
+            st.subheader(f"Ronda {round_num} - Cuadro de Perdedores")
             next_pool = []
             tmp = losers_pool[:]
 
@@ -167,7 +167,7 @@ if len(players) == playerN:
                 p1 = tmp.pop(0)
                 p2 = tmp.pop(0) if tmp else None
                 match_counter += 1
-                w, l = play_match(p1, p2, rounds, f"L_r{lround}_m{match_counter}")
+                w, l = play_match(p1, p2, rounds, f"L_r{round_num}_m{match_counter}")
                 if w == "Empate":
                     unresolved = True
                     continue
@@ -176,7 +176,7 @@ if len(players) == playerN:
                     eliminated_order.append(l)  # this player’s place is determined now
 
             losers_pool = next_pool
-            lround += 1
+            round_num += 1
 
         third_place = losers_pool[0] if len(losers_pool) == 1 else None
 
